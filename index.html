@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BDStock Nexus - 台灣股票數據更新系統</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Pin Lightweight Charts to a stable version to ensure API compatibility -->
+    <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1><i class="fas fa-chart-line"></i> BDStock Nexus</h1>
+            <div class="db-status" id="dbStatus">
+                <i class="fas fa-database"></i>
+                <span id="dbStatusText">資料庫狀態: 檢查中...</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Modern Tab Navigation -->
+            <nav class="modern-tab-nav">
+                <div class="nav-container">
+                    <div class="nav-header">
+                        <div class="nav-title">
+                            <div class="title-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="title-info">
+                                <h1 class="main-title">台股數據管理系統</h1>
+                                <p class="main-subtitle">Taiwan Stock Data Management System</p>
+                            </div>
+                        </div>
+                        <div class="nav-indicator">
+                            <div class="indicator-dot active"></div>
+                            <span class="indicator-text">系統運行中</span>
+                        </div>
+                    </div>
+                    
+                    <div class="nav-tabs">
+                        <button class="modern-tab-btn active" data-tab="update">
+                            <div class="tab-icon">
+                                <i class="fas fa-sync-alt"></i>
+                            </div>
+                            <div class="tab-content-info">
+                                <span class="tab-title">資料更新</span>
+                                <span class="tab-desc">更新股價與報酬率數據</span>
+                            </div>
+                            <div class="tab-badge">主要</div>
+                        </button>
+                        <button class="modern-tab-btn" data-tab="query">
+                            <div class="tab-icon">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <div class="tab-content-info">
+                                <span class="tab-title">資料查詢</span>
+                                <span class="tab-desc">查詢歷史股價數據</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Update Tab -->
+                <div id="updateTab" class="tab-pane active">
+                    <div class="section-group">
+
+
+                        <!-- Date Range Card -->
+                        <div class="config-section">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <div class="section-info">
+                                    <h3 class="section-title">時間範圍設定</h3>
+                                    <p class="section-subtitle">選擇要更新的數據時間範圍</p>
+                                </div>
+                                <div class="section-badge required">必選</div>
+                            </div>
+                            
+                            <div class="section-content">
+                                <!-- Quick Options -->
+                                <div class="quick-options">
+                                    <div class="quick-option" data-days="7">
+                                        <div class="option-icon">⚡</div>
+                                        <div class="option-info">
+                                            <span class="option-title">最近 7 天</span>
+                                            <span class="option-desc">快速測試</span>
+                                        </div>
+                                    </div>
+                                    <div class="quick-option recommended active" data-days="30">
+                                        <div class="option-icon">⭐</div>
+                                        <div class="option-info">
+                                            <span class="option-title">最近 30 天</span>
+                                            <span class="option-desc">推薦選項</span>
+                                        </div>
+                                        <div class="recommend-badge">推薦</div>
+                                    </div>
+                                    <div class="quick-option" data-days="90">
+                                        <div class="option-icon">📊</div>
+                                        <div class="option-info">
+                                            <span class="option-title">最近 3 個月</span>
+                                            <span class="option-desc">中期分析</span>
+                                        </div>
+                                    </div>
+                                    <div class="quick-option" data-days="365">
+                                        <div class="option-icon">📈</div>
+                                        <div class="option-info">
+                                            <span class="option-title">最近 1 年</span>
+                                            <span class="option-desc">長期趨勢</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Custom Date Range Toggle -->
+                                <div class="custom-toggle">
+                                    <button class="toggle-btn" id="customDateToggle">
+                                        <i class="fas fa-calendar-check"></i>
+                                        <span>自訂日期範圍</span>
+                                        <i class="fas fa-chevron-down toggle-arrow"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Custom Date Inputs -->
+                                <div class="custom-date-panel" id="customDatePanel">
+                                    <div class="date-inputs-row">
+                                        <div class="date-input-wrapper">
+                                            <label>開始日期</label>
+                                            <input type="date" id="startDate" class="date-input">
+                                        </div>
+                                        <div class="date-separator">→</div>
+                                        <div class="date-input-wrapper">
+                                            <label>結束日期</label>
+                                            <input type="date" id="endDate" class="date-input">
+                                        </div>
+                                    </div>
+                                    <div class="date-warning">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        時間範圍過長會增加處理時間
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stock Range Card -->
+                        <div class="config-section">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="section-info">
+                                    <h3 class="section-title">股票範圍設定</h3>
+                                    <p class="section-subtitle">選擇要更新的股票數量或範圍</p>
+                                </div>
+                                <div class="section-badge required">必選</div>
+                            </div>
+                            
+                            <div class="section-content">
+                                <!-- Stock Count Options -->
+                                <div class="stock-count-grid">
+                                    <div class="count-option active" data-count="10">
+                                        <div class="count-number">10</div>
+                                        <div class="count-info">
+                                            <span class="count-title">快速測試</span>
+                                            <span class="count-time">~30秒</span>
+                                        </div>
+                                        <div class="count-icon">⚡</div>
+                                    </div>
+                                    <div class="count-option recommended" data-count="50">
+                                        <div class="count-number">50</div>
+                                        <div class="count-info">
+                                            <span class="count-title">推薦選項</span>
+                                            <span class="count-time">~1-2分鐘</span>
+                                        </div>
+                                        <div class="count-icon">⭐</div>
+                                        <div class="recommend-badge">推薦</div>
+                                    </div>
+                                    <div class="count-option" data-count="100">
+                                        <div class="count-number">100</div>
+                                        <div class="count-info">
+                                            <span class="count-title">中等規模</span>
+                                            <span class="count-time">~3-5分鐘</span>
+                                        </div>
+                                        <div class="count-icon">📊</div>
+                                    </div>
+                                    <div class="count-option" data-count="500">
+                                        <div class="count-number">500</div>
+                                        <div class="count-info">
+                                            <span class="count-title">大規模</span>
+                                            <span class="count-time">~15-20分鐘</span>
+                                        </div>
+                                        <div class="count-icon">🚀</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Advanced Options -->
+                                <div class="advanced-options">
+                                    <div class="advanced-toggle">
+                                        <button class="toggle-btn" id="advancedToggle">
+                                            <i class="fas fa-cog"></i>
+                                            <span>進階選項</span>
+                                            <i class="fas fa-chevron-down toggle-arrow"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="advanced-panel" id="advancedPanel">
+                                        <div class="advanced-option" data-type="all">
+                                            <div class="option-header">
+                                                <i class="fas fa-globe"></i>
+                                                <span>更新所有股票</span>
+                                                <span class="danger-badge">2073檔</span>
+                                            </div>
+                                            <p class="option-desc">更新全部台股，需要較長時間 (約2-3小時)</p>
+                                        </div>
+                                        
+                                        <div class="advanced-option" data-type="listed">
+                                            <div class="option-header">
+                                                <i class="fas fa-building"></i>
+                                                <span>更新所有上市股票</span>
+                                                <span class="info-badge">~900檔</span>
+                                            </div>
+                                            <p class="option-desc">更新台灣證券交易所 (TWSE) 所有上市股票 (約45-60分鐘)</p>
+                                        </div>
+                                        
+                                        <div class="advanced-option" data-type="otc">
+                                            <div class="option-header">
+                                                <i class="fas fa-store"></i>
+                                                <span>更新所有上櫃股票</span>
+                                                <span class="info-badge">~800檔</span>
+                                            </div>
+                                            <p class="option-desc">更新台灣證券櫃檯買賣中心 (TPEX) 所有上櫃股票 (約40-50分鐘)</p>
+                                        </div>
+                                        
+                                        <div class="advanced-option" data-type="range">
+                                            <div class="option-header">
+                                                <i class="fas fa-code"></i>
+                                                <span>指定代碼範圍</span>
+                                            </div>
+                                            <p class="option-desc">精確控制更新的股票代碼範圍</p>
+                                            <div class="range-inputs" id="rangeInputs">
+                                                <div class="range-row">
+                                                    <input type="text" id="rangeFrom" placeholder="起始代碼 (如: 1101)" class="range-input">
+                                                    <span class="range-separator">→</span>
+                                                    <input type="text" id="rangeTo" placeholder="結束代碼 (如: 1110)" class="range-input">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="advanced-option" data-type="indices">
+                                            <div class="option-header">
+                                                <i class="fas fa-chart-area"></i>
+                                                <span>市場指數</span>
+                                                <span class="info-badge">1檔</span>
+                                            </div>
+                                            <p class="option-desc">更新台灣主要市場指數數據 (加權指數)</p>
+                                            <div class="indices-grid" id="indicesGrid">
+                                                <div class="index-item" data-symbol="^TWII">
+                                                    <input type="checkbox" id="index-twii" class="index-checkbox">
+                                                    <label for="index-twii" class="index-label">
+                                                        <span class="index-name">台灣加權指數</span>
+                                                        <span class="index-symbol">^TWII</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="indices-actions">
+                                                <button type="button" class="btn-small btn-outline" id="selectAllIndices">全選</button>
+                                                <button type="button" class="btn-small btn-outline" id="clearAllIndices">清除</button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Performance Tuning Options -->
+                                        <div class="advanced-option" data-type="performance">
+                                            <div class="option-header">
+                                                <i class="fas fa-gauge-high"></i>
+                                                <span>效能參數</span>
+                                                <span class="info-badge">可調</span>
+                                            </div>
+                                            <p class="option-desc">調整批次大小、並行度與批次間延遲以平衡吞吐與穩定性</p>
+                                            <div class="range-inputs">
+                                                <div class="range-row">
+                                                    <label for="inputBatchSize">批次大小</label>
+                                                    <input type="number" id="inputBatchSize" class="range-input" min="1" max="500" step="1" value="10" placeholder="每批處理的股票數">
+                                                </div>
+                                                <div class="range-row">
+                                                    <label for="inputConcurrency">並行度</label>
+                                                    <input type="number" id="inputConcurrency" class="range-input" min="1" max="100" step="1" value="20" placeholder="每批同時處理的請求數">
+                                                </div>
+                                                <div class="range-row">
+                                                    <label for="inputInterBatchDelay">批次間延遲 (毫秒)</label>
+                                                    <input type="number" id="inputInterBatchDelay" class="range-input" min="0" max="5000" step="50" value="300" placeholder="批次之間暫停時間">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="action-panel">
+                            <div class="action-header">
+                                <h3 class="action-title">
+                                    <i class="fas fa-rocket"></i>
+                                    執行操作
+                                </h3>
+                                <div class="action-status" id="actionStatus">
+                                    <span class="status-indicator ready"></span>
+                                    <span class="status-text">準備就緒</span>
+                                </div>
+                            </div>
+                            <div class="action-buttons">
+                                <button id="executeUpdate" class="btn btn-primary action-btn">
+                                    <div class="btn-content">
+                                        <i class="fas fa-play"></i>
+                                        <span class="btn-text">執行資料更新</span>
+                                        <span class="btn-subtitle">開始抓取股票數據</span>
+                                    </div>
+                                </button>
+                                <button id="startAutoExperiments" class="btn btn-outline action-btn">
+                                    <div class="btn-content">
+                                        <i class="fas fa-flask"></i>
+                                        <span class="btn-text">開始自動實驗</span>
+                                        <span class="btn-subtitle">依參數組合自動執行與導出日誌</span>
+                                    </div>
+                                </button>
+                                <button id="cancelUpdate" class="btn btn-secondary action-btn" disabled>
+                                    <div class="btn-content">
+                                        <i class="fas fa-stop"></i>
+                                        <span class="btn-text">停止更新</span>
+                                        <span class="btn-subtitle">取消進行中的操作</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+
+                    <!-- Progress Section -->
+                    <div class="section-group">
+                        <h3><i class="fas fa-tasks"></i> 執行進度</h3>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                                <span class="progress-text" id="progressText">0%</span>
+                            </div>
+                            <div class="progress-status" id="progressStatus">就緒</div>
+                        </div>
+                    </div>
+
+
+                    <!-- Logs Section -->
+                    <div class="section-group">
+                        <h3><i class="fas fa-clipboard-list"></i> 執行日誌</h3>
+                        <div class="log-actions">
+                            <label for="logLevelFilter">
+                                <i class="fas fa-filter"></i>
+                                <span>等級</span>
+                                <select id="logLevelFilter" class="modern-select">
+                                    <option value="all">全部</option>
+                                    <option value="info">資訊</option>
+                                    <option value="success">成功</option>
+                                    <option value="warning">警告</option>
+                                    <option value="error">錯誤</option>
+                                </select>
+                            </label>
+                            <label for="autoScrollLog" class="auto-scroll">
+                                <input type="checkbox" id="autoScrollLog" checked>
+                                <span>自動捲動</span>
+                            </label>
+                            <button id="exportLog" class="btn btn-outline action-btn">
+                                <div class="btn-content">
+                                    <i class="fas fa-download"></i>
+                                    <span class="btn-text">導出日誌</span>
+                                    <span class="btn-subtitle">下載目前的執行紀錄</span>
+                                </div>
+                            </button>
+                            <button id="clearLog" class="btn btn-secondary action-btn">
+                                <div class="btn-content">
+                                    <i class="fas fa-trash"></i>
+                                    <span class="btn-text">清除日誌</span>
+                                    <span class="btn-subtitle">清空日誌內容</span>
+                                </div>
+                            </button>
+                        </div>
+                        <div id="logContent" class="log-content">
+                            <!-- 動態日誌輸出區 -->
+                        </div>
+                    </div>
+
+
+                </div>
+
+                <!-- Query Tab -->
+                <div id="queryTab" class="tab-pane">
+                    <div class="section-group">
+                        <div class="section-header-main">
+                            <div class="header-left">
+                                <div class="header-icon">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                                <div class="header-info">
+                                    <h2 class="section-main-title">資料查詢</h2>
+                                    <p class="section-main-subtitle">查詢歷史股價和報酬率數據</p>
+                                </div>
+                            </div>
+                            <div class="header-right">
+                                <div class="config-status">
+                                    <div class="status-indicator ready"></div>
+                                    <span class="status-label">查詢就緒</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stock Selection Card -->
+                        <div class="config-section">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="section-info">
+                                    <h3 class="section-title">股票選擇</h3>
+                                    <p class="section-subtitle">選擇要查詢的股票代碼</p>
+                                </div>
+                                <div class="section-badge">必選</div>
+                            </div>
+                            
+                            <div class="section-content">
+                                <div class="stock-input-container">
+                                    <div class="input-group">
+                                        <div class="input-icon">
+                                            <i class="fas fa-search"></i>
+                                        </div>
+                                        <input type="text" id="tickerInput" class="modern-input" 
+                                               placeholder="輸入股票代碼 (如: 2330.TW) 或多檔股票用逗號分隔">
+                                        <div class="input-actions">
+                                            <button class="input-btn" id="addStockBtn">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="stockSuggestions" class="stock-suggestions"></div>
+                                    <div id="selectedStocks" class="selected-stocks-modern"></div>
+                                    <div class="input-hint">
+                                        <i class="fas fa-info-circle"></i>
+                                        支援單檔或多檔股票查詢，多檔請用逗號分隔 (如: 2330.TW, 2317.TW, 2454.TW)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Date Range Card -->
+                        <div class="config-section">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <div class="section-info">
+                                    <h3 class="section-title">查詢時間範圍</h3>
+                                    <p class="section-subtitle">設定數據查詢的日期區間</p>
+                                </div>
+                                <div class="section-badge">必選</div>
+                            </div>
+                            
+                            <div class="section-content">
+                                <div class="date-range-modern">
+                                    <div class="date-input-group">
+                                        <label class="date-label">開始日期</label>
+                                        <div class="date-input-container">
+                                            <i class="fas fa-calendar"></i>
+                                            <input type="date" id="queryStartDate" class="modern-date-input">
+                                        </div>
+                                    </div>
+                                    <div class="date-separator">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </div>
+                                    <div class="date-input-group">
+                                        <label class="date-label">結束日期</label>
+                                        <div class="date-input-container">
+                                            <i class="fas fa-calendar"></i>
+                                            <input type="date" id="queryEndDate" class="modern-date-input">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Query Type Card -->
+                        <div class="config-section">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <i class="fas fa-cogs"></i>
+                                </div>
+                                <div class="section-info">
+                                    <h3 class="section-title">查詢類型</h3>
+                                    <p class="section-subtitle">選擇要查詢的數據類型和時間尺度</p>
+                                </div>
+                                <div class="section-badge">配置</div>
+                            </div>
+                            
+                            <div class="section-content">
+                                <div class="query-type-options">
+                                    <div class="query-option active" data-type="price">
+                                        <div class="option-header">
+                                            <div class="option-icon">💰</div>
+                                            <div class="option-info">
+                                                <span class="option-title">股價數據</span>
+                                                <span class="option-desc">開盤、收盤、最高、最低價格及成交量</span>
+                                            </div>
+                                            <div class="option-toggle">
+                                                <input type="radio" name="queryType" value="price" id="queryTypePrice" checked>
+                                                <span class="radio-custom"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="query-option" data-type="return">
+                                        <div class="option-header">
+                                            <div class="option-icon">📊</div>
+                                            <div class="option-info">
+                                                <span class="option-title">報酬率數據</span>
+                                                <span class="option-desc">各時間尺度的報酬率統計</span>
+                                            </div>
+                                            <div class="option-toggle">
+                                                <input type="radio" name="queryType" value="return" id="queryTypeReturn">
+                                                <span class="radio-custom"></span>
+                                            </div>
+                                        </div>
+                                        <div class="frequency-panel">
+                                            <label class="frequency-label">時間尺度:</label>
+                                            <select id="frequencySelect" class="modern-select">
+                                                <option value="daily">日報酬率</option>
+                                                <option value="weekly">週報酬率</option>
+                                                <option value="monthly">月報酬率</option>
+                                                <option value="quarterly">季報酬率</option>
+                                                <option value="yearly">年報酬率</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="config-section">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <i class="fas fa-play"></i>
+                                </div>
+                                <div class="section-info">
+                                    <h3 class="section-title">執行查詢</h3>
+                                    <p class="section-subtitle">開始查詢數據並顯示結果</p>
+                                </div>
+                            </div>
+                            
+                            <div class="section-content">
+                                <div class="action-buttons-modern">
+                                    <button id="executeQuery" class="action-btn primary">
+                                        <div class="btn-icon">
+                                            <i class="fas fa-search"></i>
+                                        </div>
+                                        <div class="btn-content">
+                                            <span class="btn-title">執行查詢</span>
+                                            <span class="btn-desc">開始查詢選定的數據</span>
+                                        </div>
+                                    </button>
+                                    <button id="exportQuery" class="action-btn secondary">
+                                        <div class="btn-icon">
+                                            <i class="fas fa-download"></i>
+                                        </div>
+                                        <div class="btn-content">
+                                            <span class="btn-title">導出結果</span>
+                                            <span class="btn-desc">下載查詢結果為 CSV</span>
+                                        </div>
+                                    </button>
+                                    <button id="clearQuery" class="action-btn tertiary">
+                                        <div class="btn-icon">
+                                            <i class="fas fa-trash"></i>
+                                        </div>
+                                        <div class="btn-content">
+                                            <span class="btn-title">清除結果</span>
+                                            <span class="btn-desc">清空查詢結果表格</span>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Query Results Section -->
+                    <div class="results-section">
+                        <div class="results-header">
+                            <div class="results-title-group">
+                                <div class="results-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="results-info">
+                                    <h3 class="results-title">查詢結果</h3>
+                                    <p class="results-subtitle" id="resultsSubtitle">等待查詢數據...</p>
+                                </div>
+                            </div>
+                            <div class="results-controls">
+                                <div class="view-toggle">
+                                    <button class="toggle-btn active" data-view="table">
+                                        <i class="fas fa-table"></i>
+                                        <span>表格</span>
+                                    </button>
+                                    <button class="toggle-btn" data-view="chart">
+                                        <i class="fas fa-chart-area"></i>
+                                        <span>圖表</span>
+                                    </button>
+                                </div>
+                                <div class="results-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-label">記錄數</span>
+                                        <span class="stat-value" id="recordCount">0</span>
+                                    </div>
+                                </div>
+                                <div id="dateRangeInfo" class="date-range-info" style="display: none;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Table View -->
+                        <div class="results-content" id="tableView">
+                            <div class="modern-table-wrapper">
+                                <div class="table-scroll-container">
+                                    <table id="queryTable" class="modern-data-table">
+                                        <thead>
+                                            <tr>
+                                                <th class="loading-header">
+                                                    <div class="loading-content">
+                                                        <i class="fas fa-spinner fa-spin"></i>
+                                                        <span>準備中...</span>
+                                                    </div>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="no-data-row">
+                                                <td class="no-data-cell">
+                                                    <div class="no-data-content">
+                                                        <div class="no-data-icon">
+                                                            <i class="fas fa-search"></i>
+                                                        </div>
+                                                        <div class="no-data-text">
+                                                            <h4>尚無查詢結果</h4>
+                                                            <p>請選擇股票代碼和日期範圍，然後點擊「執行查詢」</p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chart View -->
+                        <div class="results-content hidden" id="chartView">
+                            <div class="chart-container">
+                                <div class="chart-controls">
+                                    <div class="chart-type-selector">
+                                        <!-- 僅保留 K 線圖顯示，按鈕在腳本中隱藏 -->
+                                    </div>
+                                </div>
+                                <div class="chart-wrapper">
+                                    <!-- Lightweight Charts 容器：用於 K 線圖 -->
+                                    <div id="lightweightChart" style="width: 100%; height: 420px; display: none;"></div>
+                                    <canvas id="dataChart" width="800" height="400"></canvas>
+                                </div>
+                                <div class="chart-placeholder" id="chartPlaceholder">
+                                    <div class="chart-icon">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <h4>圖表視圖</h4>
+                                    <p>執行查詢後將顯示數據圖表</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </main>
+
+    </div>
+
+    <!-- Cache-busting: bump version to force reload of updated script.js -->
+    <script src="script.js?v=20250823-2345"></script>
+  </body>
+  </html>

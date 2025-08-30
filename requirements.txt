@@ -1,0 +1,11 @@
+Flask==3.0.3
+Flask-CORS==4.0.0
+pandas==2.2.2
+yfinance==0.2.40
+beautifulsoup4==4.12.3
+requests==2.32.3
+lxml==5.2.2
+numpy==2.0.2
+psycopg2-binary==2.9.9
+setuptools>=70.0.0
+wheel>=0.43.0
